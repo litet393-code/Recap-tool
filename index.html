@@ -90,12 +90,68 @@ function pauseSpeech(){
 function stopSpeech(){
   if('speechSynthesis' in window) speechSynthesis.cancel();
 }
+  // AI Movie Recap ခလုတ်
+const aiButton = document.createElement('button');
 </script>
+// AI Movie Recap ခလုတ်
+const aiButton = document.createElement('button');
+
+aiButton.textContent = '🤖 AI နဲ့ Recap ထုတ်မယ်';
+
+aiButton.onclick = async function () {
+  if (!movie.files || !movie.files[0]) {
+    alert('အရင်ဆုံး Movie ဖိုင်ရွေးပါ။');
+    return;
+  }
+
+  if (!preview.videoWidth) {
+    alert('Video ကို အရင်ဖွင့်ပြီး ခဏစောင့်ပါ။');
+    return;
+  }
+
+  aiButton.disabled = true;
+  aiButton.textContent = 'AI လုပ်ဆောင်နေသည်...';
+
+  try {
+    const canvas = document.createElement('canvas');
+    canvas.width = preview.videoWidth;
+    canvas.height = preview.videoHeight;
+
+    canvas.getContext('2d').drawImage(preview, 0, 0);
+
+    const image = canvas.toDataURL('image/jpeg', 0.7);
+
+    const response = await fetch('/api/recap', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ image })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || 'AI Error');
+    }
+
+    document.getElementById('script').value = data.recap;
+    alert('Recap ထွက်လာပါပြီ။');
+
+  } catch (error) {
+    alert('အမှားရှိနေပါတယ်: ' + error.message);
+
+  } finally {
+    aiButton.disabled = false;
+    aiButton.textContent = '🤖 AI နဲ့ Recap ထုတ်မယ်';
+  }
+};
+
+movie.parentElement.appendChild(aiButton);
+  
 </body>
 </html>
 
-// AI Movie Recap ခလုတ်
-const aiButton = document.createElement('button');
 aiButton.textContent = '🤖 AI နဲ့ Recap ထုတ်မယ်';
 aiButton.onclick = async function () {
   if (!movie.files || !movie.files[0]) {
