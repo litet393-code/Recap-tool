@@ -1,1 +1,96 @@
 
+<!DOCTYPE html>
+<html lang="my">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#101827">
+<title>Auto Movie Recap</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#101827;color:#fff;font-family:Arial,sans-serif;padding:20px}
+.container{max-width:650px;margin:auto}
+h1{color:#55d6be;text-align:center}
+.sub{text-align:center;color:#aab6c8}
+.panel{background:#1d293b;padding:18px;border-radius:15px;margin:18px 0}
+label{display:block;margin:12px 0 8px;font-weight:bold}
+input,textarea,select{width:100%;padding:13px;border-radius:9px;border:1px solid #40516b;background:#111c2d;color:white}
+textarea{min-height:150px;resize:vertical}
+button{width:100%;padding:14px;border:0;border-radius:10px;background:#12b99b;color:#071b20;font-size:16px;font-weight:bold;margin-top:12px}
+button.secondary{background:#34445e;color:white}
+video{width:100%;margin-top:12px;border-radius:10px;background:#000}
+.note{font-size:13px;color:#aab6c8;line-height:1.6}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>🎬 Auto Movie Recap</h1>
+<p class="sub">မြန်မာ Movie Recap Studio</p>
+
+<div class="panel">
+<h3>၁။ Movie Upload</h3>
+<label>ရုပ်ရှင်ဖိုင် ရွေးပါ</label>
+<input type="file" id="movie" accept="video/*">
+<video id="preview" controls hidden></video>
+<p class="note">ဖုန်းထဲမှ Video ဖိုင်ကို ရွေးနိုင်ပါတယ်။</p>
+</div>
+
+<div class="panel">
+<h3>၂။ Recap Script</h3>
+<label>မြန်မာ Recap စာသား</label>
+<textarea id="script" placeholder="ဒီနေရာမှာ Movie Recap စာသားထည့်ပါ..."></textarea>
+<p class="note">မှတ်ချက် - လက်ရှိဗားရှင်းမှာ ရုပ်ရှင်ကို အလိုအလျောက် ခွဲခြမ်းစိတ်ဖြာပြီး Recap ရေးပေးနိုင်ခြင်း မရှိသေးပါ။</p>
+</div>
+
+<div class="panel">
+<h3>၃။ မြန်မာအသံ</h3>
+<label>အသံရွေးချယ်ရန်</label>
+<select id="voice">
+<option value="my-MM">မြန်မာအသံ</option>
+</select>
+<button onclick="speak()">🔊 အသံထွက်ဖတ်မယ်</button>
+<button class="secondary" onclick="pauseSpeech()">ခဏရပ်မယ်</button>
+<button class="secondary" onclick="stopSpeech()">ရပ်မယ်</button>
+</div>
+
+<p class="note" style="text-align:center">Auto Movie Recap · Android Web App</p>
+</div>
+
+<script>
+const movie = document.getElementById('movie');
+const preview = document.getElementById('preview');
+
+movie.addEventListener('change', function(){
+  if(this.files && this.files[0]){
+    preview.src = URL.createObjectURL(this.files[0]);
+    preview.hidden = false;
+  }
+});
+
+function speak(){
+  const text = document.getElementById('script').value.trim();
+  if(!text){
+    alert('Recap စာသား အရင်ထည့်ပါ။');
+    return;
+  }
+  if(!('speechSynthesis' in window)){
+    alert('ဒီ Browser မှာ အသံဖတ်စနစ် မရနိုင်ပါ။');
+    return;
+  }
+  speechSynthesis.cancel();
+  const msg = new SpeechSynthesisUtterance(text);
+  msg.lang = 'my-MM';
+  msg.rate = 0.9;
+  msg.pitch = 0.9;
+  speechSynthesis.speak(msg);
+}
+function pauseSpeech(){
+  if('speechSynthesis' in window) speechSynthesis.pause();
+}
+function stopSpeech(){
+  if('speechSynthesis' in window) speechSynthesis.cancel();
+}
+</script>
+</body>
+</html>
+
