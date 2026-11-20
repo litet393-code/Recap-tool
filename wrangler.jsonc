@@ -2,5 +2,9 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "recap-tool",
   "main": "worker.js",
-  "compatibility_date": "2026-11-20"
+  "compatibility_date": "2026-11-20",
+  "assets": {
+    "directory": ".",
+    "run_worker_first": ["/api/*"]
+  }
 }
