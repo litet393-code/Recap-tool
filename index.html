@@ -8,18 +8,20 @@
 <title>Auto Movie Recap</title>
 <style>
 *{box-sizing:border-box}
-body{margin:0;background:#101827;color:#fff;font-family:Arial,sans-serif;padding:20px}
+body{margin:0;padding:18px;background:#101827;color:white;font-family:Arial,sans-serif}
 .container{max-width:650px;margin:auto}
-h1{color:#55d6be;text-align:center}
+h1{text-align:center;color:#55d6be}
 .sub{text-align:center;color:#aab6c8}
 .panel{background:#1d293b;padding:18px;border-radius:15px;margin:18px 0}
-label{display:block;margin:12px 0 8px;font-weight:bold}
-input,textarea,select{width:100%;padding:13px;border-radius:9px;border:1px solid #40516b;background:#111c2d;color:white}
-textarea{min-height:150px;resize:vertical}
+label{display:block;margin:12px 0;font-weight:bold}
+input,textarea{width:100%;padding:13px;border-radius:9px;border:1px solid #40516b;background:#111c2d;color:white}
+textarea{min-height:180px}
 button{width:100%;padding:14px;border:0;border-radius:10px;background:#12b99b;color:#071b20;font-size:16px;font-weight:bold;margin-top:12px}
-button.secondary{background:#34445e;color:white}
-video{width:100%;margin-top:12px;border-radius:10px;background:#000}
+.secondary{background:#34445e;color:white}
+button:disabled{opacity:.5}
+video{width:100%;margin-top:12px;border-radius:10px;background:black}
 .note{font-size:13px;color:#aab6c8;line-height:1.6}
+#status{text-align:center;color:#55d6be}
 </style>
 </head>
 <body>
@@ -32,43 +34,96 @@ video{width:100%;margin-top:12px;border-radius:10px;background:#000}
 <label>ရုပ်ရှင်ဖိုင် ရွေးပါ</label>
 <input type="file" id="movie" accept="video/*">
 <video id="preview" controls hidden></video>
-<p class="note">ဖုန်းထဲမှ Video ဖိုင်ကို ရွေးနိုင်ပါတယ်။</p>
+<p class="note">ဖုန်းထဲမှ Video ဖိုင်ရွေးပါ။</p>
 </div>
 
 <div class="panel">
-<h3>၂။ Recap Script</h3>
-<label>မြန်မာ Recap စာသား</label>
-<textarea id="script" placeholder="ဒီနေရာမှာ Movie Recap စာသားထည့်ပါ..."></textarea>
-<p class="note">မှတ်ချက် - လက်ရှိဗားရှင်းမှာ ရုပ်ရှင်ကို အလိုအလျောက် ခွဲခြမ်းစိတ်ဖြာပြီး Recap ရေးပေးနိုင်ခြင်း မရှိသေးပါ။</p>
+<h3>၂။ AI Movie Recap</h3>
+<button id="aiButton">🤖 AI နဲ့ Recap ထုတ်မယ်</button>
+<p id="status">Movie ဖိုင်ရွေးပါ။</p>
 </div>
 
 <div class="panel">
-<h3>၃။ မြန်မာအသံ</h3>
-<label>အသံရွေးချယ်ရန်</label>
-<select id="voice">
-<option value="my-MM">မြန်မာအသံ</option>
-</select>
-<button onclick="speak()">🔊 အသံထွက်ဖတ်မယ်</button>
-<button class="secondary" onclick="pauseSpeech()">ခဏရပ်မယ်</button>
-<button class="secondary" onclick="stopSpeech()">ရပ်မယ်</button>
+<h3>၃။ Recap Script</h3>
+<textarea id="script" placeholder="Recap စာသား ဒီနေရာမှာ ပေါ်လာပါမယ်..."></textarea>
 </div>
 
+<div class="panel">
+<h3>၄။ မြန်မာအသံ</h3>
+<button id="speakButton">🔊 အသံထွက်ဖတ်မယ်</button>
+<button class="secondary" id="pauseButton">ခဏရပ်မယ်</button>
+<button class="secondary" id="stopButton">အသံရပ်မယ်</button>
+</div>
 <p class="note" style="text-align:center">Auto Movie Recap · Android Web App</p>
 </div>
 
 <script>
-const movie = document.getElementById('movie');
-const preview = document.getElementById('preview');
+const movie=document.getElementById('movie');
+const preview=document.getElementById('preview');
+const script=document.getElementById('script');
+const aiButton=document.getElementById('aiButton');
+const statusText=document.getElementById('status');
 
-movie.addEventListener('change', function(){
-  if(this.files && this.files[0]){
-    preview.src = URL.createObjectURL(this.files[0]);
-    preview.hidden = false;
+movie.addEventListener('change',function(){
+  if(this.files&&this.files[0]){
+    preview.src=URL.createObjectURL(this.files[0]);
+    preview.hidden=false;
+    statusText.textContent='Movie ဖိုင် ရွေးပြီးပါပြီ။';
   }
 });
 
-function speak(){
-  const text = document.getElementById('script').value.trim();
+aiButton.addEventListener('click',async function(){
+  if(!movie.files||!movie.files[0]){
+    alert('အရင်ဆုံး Movie ဖိုင်ရွေးပါ။');
+    return;
+  }
+
+  if(!preview.videoWidth){
+    alert('Video ကို အရင်ဖွင့်ပြီး ခဏစောင့်ပါ။');
+    return;
+  }
+
+  aiButton.disabled=true;
+  aiButton.textContent='AI လုပ်ဆောင်နေသည်...';
+  statusText.textContent='AI စစ်ဆေးနေပါတယ်။';
+
+  try{
+    preview.pause();
+
+    const canvas=document.createElement('canvas');
+    canvas.width=preview.videoWidth;
+    canvas.height=preview.videoHeight;
+    canvas.getContext('2d').drawImage(preview,0,0);
+
+    const image=canvas.toDataURL('image/jpeg',0.7);
+
+    const response=await fetch('/api/recap',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({image:image})
+    });
+
+    const data=await response.json();
+
+    if(!response.ok){
+      throw new Error(data.error||'AI Error');
+    }
+
+    script.value=data.recap||'Recap စာသား မရရှိပါ။';
+    statusText.textContent='AI Recap ရရှိပါပြီ။';
+    alert('AI Recap ထွက်လာပါပြီ။');
+
+  }catch(error){
+    statusText.textContent='AI လုပ်ဆောင်မှု မအောင်မြင်ပါ။';
+    alert('အမှားရှိနေပါတယ်: '+error.message);
+  }finally{
+    aiButton.disabled=false;
+    aiButton.textContent='🤖 AI နဲ့ Recap ထုတ်မယ်';
+  }
+});
+
+document.getElementById('speakButton').onclick=function(){
+  const text=script.value.trim();
   if(!text){
     alert('Recap စာသား အရင်ထည့်ပါ။');
     return;
@@ -78,176 +133,20 @@ function speak(){
     return;
   }
   speechSynthesis.cancel();
-  const msg = new SpeechSynthesisUtterance(text);
-  msg.lang = 'my-MM';
-  msg.rate = 0.9;
-  msg.pitch = 0.9;
+  const msg=new SpeechSynthesisUtterance(text);
+  msg.lang='my-MM';
+  msg.rate=0.9;
+  msg.pitch=0.9;
   speechSynthesis.speak(msg);
-}
-function pauseSpeech(){
-  if('speechSynthesis' in window) speechSynthesis.pause();
-}
-function stopSpeech(){
-  if('speechSynthesis' in window) speechSynthesis.cancel();
-}
-  // AI Movie Recap ခလုတ်
-const aiButton = document.createElement('button');
-
-// AI Movie Recap ခလုတ်
-const aiButton = document.createElement('button');
-
-aiButton.textContent = '🤖 AI နဲ့ Recap ထုတ်မယ်';
-
-aiButton.onclick = async function () {
-  if (!movie.files || !movie.files[0]) {
-    alert('အရင်ဆုံး Movie ဖိုင်ရွေးပါ။');
-    return;
-  }
-
-  if (!preview.videoWidth) {
-    alert('Video ကို အရင်ဖွင့်ပြီး ခဏစောင့်ပါ။');
-    return;
-  }
-
-  aiButton.disabled = true;
-  aiButton.textContent = 'AI လုပ်ဆောင်နေသည်...';
-
-  try {
-    const canvas = document.createElement('canvas');
-    canvas.width = preview.videoWidth;
-    canvas.height = preview.videoHeight;
-
-    canvas.getContext('2d').drawImage(preview, 0, 0);
-
-    const image = canvas.toDataURL('image/jpeg', 0.7);
-
-    const response = await fetch('/api/recap', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ image })
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.error || 'AI Error');
-    }
-
-    document.getElementById('script').value = data.recap;
-    alert('Recap ထွက်လာပါပြီ။');
-
-  } catch (error) {
-    alert('အမှားရှိနေပါတယ်: ' + error.message);
-
-  } finally {
-    aiButton.disabled = false;
-    aiButton.textContent = '🤖 AI နဲ့ Recap ထုတ်မယ်';
-  }
 };
 
-movie.parentElement.appendChild(aiButton);
-</script>
-// AI Movie Recap ခလုတ်
-const aiButton = document.createElement('button');
-aiButton.textContent = '🤖 AI နဲ့ Recap ထုတ်မယ်';
-
-aiButton.onclick = async function () {
-  if (!movie.files || !movie.files[0]) {
-    alert('အရင်ဆုံး Movie ဖိုင်ရွေးပါ။');
-    return;
-  }
-
-  if (!preview.videoWidth) {
-    alert('Video ကို အရင်ဖွင့်ပြီး ခဏစောင့်ပါ။');
-    return;
-  }
-
-  aiButton.disabled = true;
-  aiButton.textContent = 'AI လုပ်ဆောင်နေသည်...';
-
-  try {
-    const canvas = document.createElement('canvas');
-    canvas.width = preview.videoWidth;
-    canvas.height = preview.videoHeight;
-    canvas.getContext('2d').drawImage(preview, 0, 0);
-
-    const image = canvas.toDataURL('image/jpeg', 0.7);
-
-    const response = await fetch('/api/recap', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({image})
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.error || 'AI Error');
-    }
-
-    document.getElementById('script').value = data.recap;
-    alert('Recap ထွက်လာပါပြီ။');
-
-  } catch (error) {
-    alert('အမှားရှိနေပါတယ်: ' + error.message);
-  } finally {
-    aiButton.disabled = false;
-    aiButton.textContent = '🤖 AI နဲ့ Recap ထုတ်မယ်';
-  }
+document.getElementById('pauseButton').onclick=function(){
+  if('speechSynthesis' in window)speechSynthesis.pause();
 };
 
-movie.parentElement.appendChild(aiButton);
-
+document.getElementById('stopButton').onclick=function(){
+  if('speechSynthesis' in window)speechSynthesis.cancel();
+};
 </script>
 </body>
 </html>
-
-aiButton.textContent = '🤖 AI နဲ့ Recap ထုတ်မယ်';
-aiButton.onclick = async function () {
-  if (!movie.files || !movie.files[0]) {
-    alert('အရင်ဆုံး Movie ဖိုင်ရွေးပါ။');
-    return;
-  }
-
-  if (!preview.videoWidth) {
-    alert('Video ကို အရင်ဖွင့်ပြီး ခဏစောင့်ပါ။');
-    return;
-  }
-
-  aiButton.disabled = true;
-  aiButton.textContent = 'AI လုပ်ဆောင်နေသည်...';
-
-  try {
-    const canvas = document.createElement('canvas');
-    canvas.width = preview.videoWidth;
-    canvas.height = preview.videoHeight;
-    canvas.getContext('2d').drawImage(preview, 0, 0);
-
-    const image = canvas.toDataURL('image/jpeg', 0.7);
-
-    const response = await fetch('/api/recap', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ image })
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.error || 'AI Error');
-    }
-
-    document.getElementById('script').value = data.recap;
-    alert('Recap ထွက်လာပါပြီ။');
-  } catch (error) {
-    alert('အမှားရှိနေပါတယ်: ' + error.message);
-  } finally {
-    aiButton.disabled = false;
-    aiButton.textContent = '🤖 AI နဲ့ Recap ထုတ်မယ်';
-  }
-};
-
-movie.parentElement.appendChild(aiButton);
-
