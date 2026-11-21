@@ -63,13 +63,30 @@ const preview=document.getElementById('preview');
 const script=document.getElementById('script');
 const aiButton=document.getElementById('aiButton');
 const statusText=document.getElementById('status');
+movie.addEventListener('change', function(){
+  const file = movie.files[0];
 
-movie.addEventListener('change',function(){
-  if(this.files&&this.files[0]){
-    preview.src=URL.createObjectURL(this.files[0]);
-    preview.hidden=false;
-    statusText.textContent='Movie ဖိုင် ရွေးပြီးပါပြီ။';
-  }
+  if (!file) return;
+
+  preview.pause();
+  preview.removeAttribute('src');
+  preview.load();
+
+  preview.src = URL.createObjectURL(file);
+  preview.hidden = false;
+  preview.style.display = 'block';
+
+  preview.onloadedmetadata = function(){
+    statusText.textContent = 'Video အဆင်သင့်ဖြစ်ပါပြီ။';
+  };
+
+  preview.onerror = function(){
+    statusText.textContent = 'Video ဖွင့်မရပါ။ အခြား MP4 ဖိုင်ဖြင့် စမ်းပါ။';
+  };
+
+  preview.load();
+});
+
 });
 
 aiButton.addEventListener('click',async function(){
